@@ -1,49 +1,47 @@
-import json
+import psycopg2
 class DataBase():
 
-  def __init__(self, name):
-    self.filename = name
+  def __init__(self):
+    self.conn = None
+    self.cursor = None
     
   def addUser(self, userName):
-    new_data = {
-      "name":userName,
-      "stat":"0"
-    }
-    with open(self.filename, "r+") as stats:
-      base_json = json.load(stats)
-      is_find = False
-      for stat in base_json['stats']:
-        if (stat.get("name") == userName):
-          is_find = True
-          break
-      if not is_find:        
-        base_json['stats'].append(new_data)
-        stats.seek(0)
-        json.dump(base_json,stats, indent=4)
-        stats.truncate()
+      self.cursor.execute(f"insert into users(name) values ('{userName}');")
+      self.conn.commit()
 
-  def addScore(self, user_name, scores):
-    new_data = {
-      "name":user_name,
-      "stat":scores
-    }
-    with open(self.filename, "r+") as stats:
-      base_json = json.load(stats)
-      for stat in base_json['stats']:
-        if (stat.get("name") == user_name):
-          if ( not int(stat['stat']) > scores):
-            stat['stat'] = scores
-            stats.seek(0)
-            json.dump(base_json,stats, indent=4)
-            stats.truncate()
-          break
+  def addScore(self, userName, scores):
+    user_id = self.getUserIdByName(userName)
+    if (user_id == -1):
+      self.addUser(userName)
+    user_id = self.getUserIdByName(userName)
+    self.cursor.execute(f"select * from scores as sc where sc.id_user = '{user_id}'")
+    records = self.cursor.fetchall()
+    if len(records) == 0:
+      self.cursor.execute(f"insert into scores(id_user, score) VALUES ({user_id}, {scores});")
+    else:
+      if records[0][2] < scores:
+        self.cursor.execute(f"update scores set score = {scores} where id_user = {user_id};")
+    self.conn.commit()
+  
+  def getUserIdByName(self, userName):
+    self.cursor.execute(f"select us.id from users as us where us.name = '{userName}'")
+    records = self.cursor.fetchall()
+    if len(records) == 0:
+      return -1
+    else:
+      return records[0][0]
 
-  def getAllScores(self):
-    with open(self.filename, "r") as stats:
-      base_json = stats.read()
-    base = json.loads(base_json)
-    def sort_by_key(list):
-      return list['stat']
-    base = (sorted(base['stats'], key=sort_by_key, reverse=True))
-    return base
+  def getAllScores(self, num = 3):
+    self.cursor.execute(f"select us.name, sc.score from users us join scores sc on sc.id_user = us.id order by sc.score DESC ")
+    records = self.cursor.fetchmany(size=num)
+    return records
+
+  def createConn(self,host = '37.195.213.170', user = 'user1', password = 'user'):
+    self.conn = psycopg2.connect(dbname='superman_survival', user=user, 
+                        password=password, host=host)
+    self.cursor = self.conn.cursor()
+
+  def closeConn(self):
+    self.cursor.close()
+    self.conn.close()
 

@@ -13,7 +13,7 @@ import sys
 from pyglet.image import load as pyglet_load
 # Constants
 
-
+DATABASE = db.DataBase()
 # Classes
 
 def resource_path(relative_path):
@@ -270,8 +270,9 @@ class SpaceShooter(arcade.View):
       arcade.unschedule(self.add_score)
       arcade.unschedule(self.add_enemy)
       arcade.unschedule(self.add_cloud)
-      self.database = db.DataBase('base/base.json')
-      self.database.addScore(self.userName,self.scores)
+      DATABASE.createConn()
+      DATABASE.addScore(self.userName,self.scores)
+      DATABASE.closeConn()
       arcade.stop_sound(self.media_player)
       stat_view = StatMenu(self.scaling)
       self.window.show_view(stat_view)
@@ -365,8 +366,11 @@ class MainMenu(arcade.View):
 
   def on_click(self, event):
       
-      self.database = db.DataBase('base/base.json')
-      self.database.addUser(self.input_field.text)
+      #DATABASE.createConn()
+      #DATABASE.addScore(self.userName,self.scores)
+      #DATABASE.closeConn()
+      #self.database = db.DataBase('base/base.json')
+      #self.database.addUser(self.input_field.text)
       game_view = SpaceShooter(self.scaling,self.input_field.text)
       self.window.show_view(game_view)
 
@@ -425,11 +429,13 @@ class StatMenu(arcade.View):
     )
 
   def update_text(self):
-      self.database = db.DataBase('base/base.json')
-      self.scores = self.database.getAllScores()
+    
+      DATABASE.createConn()
+      self.scores = DATABASE.getAllScores()
+      DATABASE.closeConn()
       str = "Leaderboard:\n"
       for score in self.scores:
-        str+=f"{score['name']} - {score['stat']}\n"
+        str+=f"{score[0]} - {score[1]}\n"
       self.v_box.children[0] = arcade.gui.UITextArea(
         text=str,
         text_color=arcade.color.DARK_RED,

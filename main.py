@@ -14,6 +14,7 @@ main_menu = ag.MainMenu(SCALING)
 window.show_view(main_menu)
 # Setup to play
 # Run the game
+
 ag.arcade.run()
 
 
