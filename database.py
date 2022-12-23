@@ -9,18 +9,18 @@ class DataBase():
       self.cursor.execute(f"insert into users(name) values ('{userName}');")
       self.conn.commit()
 
-  def addScore(self, userName, scores):
+  def addScore(self, userName, scores, level):
     user_id = self.getUserIdByName(userName)
     if (user_id == -1):
       self.addUser(userName)
     user_id = self.getUserIdByName(userName)
-    self.cursor.execute(f"select * from scores as sc where sc.id_user = '{user_id}'")
+    self.cursor.execute(f"select * from scores{level} as sc where sc.id_user = '{user_id}'")
     records = self.cursor.fetchall()
     if len(records) == 0:
-      self.cursor.execute(f"insert into scores(id_user, score) VALUES ({user_id}, {scores});")
+      self.cursor.execute(f"insert into scores{level}(id_user, score) VALUES ({user_id}, {scores});")
     else:
       if records[0][2] < scores:
-        self.cursor.execute(f"update scores set score = {scores} where id_user = {user_id};")
+        self.cursor.execute(f"update scores{level} set score = {scores} where id_user = {user_id};")
     self.conn.commit()
   
   def getUserIdByName(self, userName):
@@ -31,8 +31,8 @@ class DataBase():
     else:
       return records[0][0]
 
-  def getAllScores(self, num = 3):
-    self.cursor.execute(f"select us.name, sc.score from users us join scores sc on sc.id_user = us.id order by sc.score DESC ")
+  def getAllScores(self, level, num = 3):
+    self.cursor.execute(f"select us.name, sc.score from users us join scores{level} sc on sc.id_user = us.id order by sc.score DESC ")
     records = self.cursor.fetchmany(size=num)
     return records
 
