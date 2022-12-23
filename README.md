@@ -3,4 +3,4 @@
 
 ![SuperMan](/images/superman.png)
 
-[Windows Installer](https://disk.yandex.ru/d/yOUJ5jdqcrGSEw "Яндекс Диск")
+[Windows Installer](https://disk.yandex.ru/d/EZ7plr_dmc8J0Q "Яндекс Диск")
